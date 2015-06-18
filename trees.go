@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -53,7 +52,6 @@ func newTreeEntry(repo *git.Repository, entry *git.TreeEntry) *TreeEntry {
 
 // CreateTree creates a new tree in the object db
 func CreateTree(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	log.Printf("Creating Tree\n")
 	treeParams := &TreeCreateParams{}
 	jsonDecoder := json.NewDecoder(r.Body)
 	err := jsonDecoder.Decode(treeParams)
@@ -71,7 +69,6 @@ func CreateTree(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	defer builder.Free()
 
 	if treeParams.Base != "" {
-		log.Printf("Got base: %v", treeParams.Base)
 		baseID, err := git.NewOid(treeParams.Base)
 		if err != nil {
 			InternalServerError(w, fmt.Sprintf("Bad sha for base_tree: %v", err))
@@ -87,7 +84,6 @@ func CreateTree(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		var i uint64
 		for i = 0; i < base.EntryCount(); i++ {
 			entry := base.EntryByIndex(i)
-			log.Printf("Inserting from base %v (%v)\n", entry.Name, entry.Id.String())
 			err = builder.Insert(entry.Name, entry.Id, int(entry.Filemode))
 			if err != nil {
 				InternalServerError(w, fmt.Sprintf("Failed to create tree - base entry %v could not be inserted: %v", entry.Name, err))
@@ -106,10 +102,7 @@ func CreateTree(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		if err != nil {
 			InternalServerError(w, fmt.Sprintf("Bad file mode for entry %v: %v", entry.Path, err))
 			return
-		} else {
-			log.Printf("Filemode for %v: %v\n", entry.Path, mode)
 		}
-		log.Printf("Inserting from params %v (%v)\n", entry.Path, oid.String())
 		err = builder.Insert(entry.Path, oid, mode)
 		if err != nil {
 			InternalServerError(w, fmt.Sprintf("Failed to create tree - %v could not be inserted: %v", entry.Path, err))
@@ -122,15 +115,12 @@ func CreateTree(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		InternalServerError(w, fmt.Sprintf("Unable to create tree: %v", err))
 		return
 	}
-	log.Printf("Wrote tree to db %v", oid)
-
 	GetTree(w, r, httprouter.Params{httprouter.Param{Key: "sha", Value: oid.String()}})
 }
 
 // GetTree gets a representation of a single tree
 func GetTree(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	sha := params.ByName("sha")
-	log.Printf("Get Tree %v", sha)
 	oid, err := git.NewOid(sha)
 	if err != nil {
 		InternalServerError(w, fmt.Sprintf("Invalid sha: %v", err))
@@ -152,8 +142,6 @@ func GetTree(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	for i = 0; i < tree.EntryCount(); i++ {
 		repoTree.Tree[i] = newTreeEntry(repo, tree.EntryByIndex(i))
 	}
-
-	log.Printf("Tree %v has %v entries", sha, tree.EntryCount())
 
 	sendJSON(w, 200, repoTree)
 }

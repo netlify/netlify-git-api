@@ -44,13 +44,13 @@ func CreateBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params
 			return
 		}
 
-		reader = base64.NewDecoder(base64.StdEncoding, bytes.NewBufferString(blobParams.Content))
+		reader = base64.NewDecoder(base64.URLEncoding, bytes.NewBufferString(blobParams.Content))
 	}
 
 	oid, err := repo.CreateBlobFromChunks("", func(maxLen int) ([]byte, error) {
 		b := make([]byte, maxLen)
-		_, err := reader.Read(b)
-		return b, err
+		l, err := reader.Read(b)
+		return b[0:l], err
 	})
 
 	blob, err := repo.LookupBlob(oid)

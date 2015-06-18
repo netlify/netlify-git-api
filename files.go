@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"path"
 
@@ -53,7 +52,6 @@ func GetFile(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 			fmt.Fprintf(w, "Error while getting blob: %v", err)
 			return
 		}
-		log.Printf("Type: %v", r.Header.Get("Content-Type"))
 
 		if r.Header.Get("Content-Type") == rawContentType {
 			w.Write(blob.Contents())

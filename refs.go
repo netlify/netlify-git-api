@@ -85,5 +85,9 @@ func UpdateRef(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		},
 	}
 
+	if !repo.IsBare() {
+		repo.CheckoutHead(nil)
+	}
+
 	sendJSON(w, 200, ref)
 }
