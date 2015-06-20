@@ -42,13 +42,13 @@ func (r *Repo) newRepoFile(entry *git.TreeEntry, dir string, expand bool) (*File
 		}
 
 		file.Files = make([]*File, tree.EntryCount())
-		i := 0
-		tree.Walk(func(name string, entry *git.TreeEntry) int {
+
+		var i uint64
+		for i = 0; i < tree.EntryCount(); i++ {
+			entry := tree.EntryByIndex(i)
 			newFile, _ := r.newRepoFile(entry, file.Path, false)
 			file.Files[i] = newFile
-			i++
-			return 0
-		})
+		}
 	}
 
 	return file, nil

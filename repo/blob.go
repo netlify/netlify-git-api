@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"bytes"
 	"io"
 
 	"github.com/libgit2/git2go"
@@ -12,29 +11,47 @@ type Blob struct {
 	Sha  string `json:"sha"`
 	Size int64  `json:"size"`
 	id   *git.Oid
-	repo Repo
+	repo *Repo
+	i    int64  // current reading index
+	data []byte // data
 }
 
 func (b *Blob) Read(p []byte) (n int, err error) {
-	buf := bytes.NewBuffer(p)
-	i, err := b.WriteTo(buf)
-	return int(i), err
+	if len(p) == 0 {
+		return 0, nil
+	}
+	if b.i == 0 {
+		blob, err := b.repo.repo.LookupBlob(b.id)
+		if err != nil {
+			return 0, err
+		}
+		b.data = blob.Contents()
+	}
+	if b.i >= int64(len(b.data)) {
+		return 0, io.EOF
+	}
+	n = copy(p, b.data[b.i:])
+	b.i += int64(n)
+	return
 }
 
 // WriteTo writes the content of a blob to a writer
-func (b *Blob) WriteTo(w io.Writer) (n int64, err error) {
-	odb, err := b.repo.repo.Odb()
-	if err != nil {
-		return n, err
-	}
-
-	reader, err := odb.NewReadStream(b.id)
-	if err != nil {
-		return n, err
-	}
-	defer reader.Free()
-	return io.Copy(w, reader)
-}
+// Seems NewReadStream is not supported in the libgit2 backend :/
+// func (b *Blob) WriteTo(w io.Writer) (n int64, err error) {
+// 	odb, err := b.repo.repo.Odb()
+// 	if err != nil {
+// 		return n, err
+// 	}
+//
+// 	log.Println("Opening readstream from odb")
+// 	reader, err := odb.NewReadStream(b.id)
+// 	if err != nil {
+// 		log.Printf("Error opening stream: %v", err)
+// 		return n, err
+// 	}
+// 	log.Printf("Copying %v to %v for %v\n", reader, w, b.Sha)
+// 	return io.Copy(w, reader)
+// }
 
 // GetBlob returns a single blob from the repo
 func (r *Repo) GetBlob(sha string) (*Blob, error) {
@@ -51,6 +68,8 @@ func (r *Repo) GetBlob(sha string) (*Blob, error) {
 	return &Blob{
 		Sha:  sha,
 		Size: blob.Size(),
+		id:   oid,
+		repo: r,
 	}, nil
 }
 
