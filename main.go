@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/julienschmidt/httprouter"
-	git "github.com/libgit2/git2go"
+	"github.com/netlify/netlify-git-api/repo"
 	"github.com/rs/cors"
 )
 
@@ -34,7 +34,8 @@ var (
   </body>
 </html>
   `
-	repo *git.Repository
+
+	currentRepo *repo.Repo
 )
 
 func init() {
@@ -42,7 +43,8 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("Error getting current working dir: %v", err))
 	}
-	repo, err = git.OpenRepository(cwd)
+
+	currentRepo, err = repo.Open(cwd)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to open git repository in %v: %v", cwd, err))
 	}

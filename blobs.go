@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/libgit2/git2go"
 )
 
 // Blob represents a blob
@@ -26,7 +25,6 @@ type BlobCreateParams struct {
 
 // CreateBlob uploads a new blob and stores it in the repository object db
 func CreateBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	var oid *git.Oid
 	var reader io.Reader
 	if r.Header.Get("Content-Type") == rawContentType {
 		reader = r.Body
@@ -46,20 +44,13 @@ func CreateBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params
 
 		reader = base64.NewDecoder(base64.URLEncoding, bytes.NewBufferString(blobParams.Content))
 	}
-
-	oid, err := repo.CreateBlobFromChunks("", func(maxLen int) ([]byte, error) {
-		b := make([]byte, maxLen)
-		l, err := reader.Read(b)
-		return b[0:l], err
-	})
-
-	blob, err := repo.LookupBlob(oid)
+	blob, err := currentRepo.PutBlob(reader)
 	if err != nil {
-		InternalServerError(w, fmt.Sprintf("Blob could not be read after creation: %v", err))
+		HandleError(w, err)
 		return
 	}
 
-	sendJSON(w, 200, &Blob{Sha: oid.String(), Size: blob.Size()})
+	sendJSON(w, 200, blob)
 }
 
 // GetBlob returns information about a blob in the repository.
@@ -67,35 +58,17 @@ func CreateBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params
 // the actual blob contents
 func GetBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	sha := params.ByName("sha")
-	oid, err := git.NewOid(sha)
+	blob, err := currentRepo.GetBlob(sha)
 	if err != nil {
-		InternalServerError(w, fmt.Sprintf("Invalid sha: %v", err))
-		return
-	}
-
-	blob, err := repo.LookupBlob(oid)
-	if err != nil {
-		NotFoundError(w, fmt.Sprintf("Blob not found for %v: %v", sha, err))
+		HandleError(w, err)
 		return
 	}
 
 	if r.Header.Get("Content-Type") == rawContentType {
-		odb, err := repo.Odb()
-		if err != nil {
-			InternalServerError(w, fmt.Sprintf("Could not open repository backend: %v", err))
-			return
-		}
-
-		reader, err := odb.NewReadStream(blob.Id())
-		if err != nil {
-			InternalServerError(w, fmt.Sprintf("Unable to read blob: %v", err))
-			return
-		}
-		defer reader.Close()
 		w.Header().Add("Content-Type", "application/octet-stream")
-		io.Copy(w, reader)
+		io.Copy(w, blob)
 		return
 	}
 
-	sendJSON(w, 200, &Blob{Sha: blob.Id().String(), Size: blob.Size()})
+	sendJSON(w, 200, blob)
 }
