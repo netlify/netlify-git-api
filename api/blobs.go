@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"golang.org/x/net/context"
 )
 
 // Blob represents a blob
@@ -24,7 +25,9 @@ type BlobCreateParams struct {
 }
 
 // CreateBlob uploads a new blob and stores it in the repository object db
-func CreateBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func CreateBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params, ctx context.Context) {
+	currentRepo := getRepo(ctx)
+
 	var reader io.Reader
 	if r.Header.Get("Content-Type") == rawContentType {
 		reader = r.Body
@@ -56,7 +59,8 @@ func CreateBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params
 // GetBlob returns information about a blob in the repository.
 // If the Content-Type is set to "application/vnd.netlify.raw" it will return
 // the actual blob contents
-func GetBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func GetBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params, ctx context.Context) {
+	currentRepo := getRepo(ctx)
 	sha := params.ByName("sha")
 	blob, err := currentRepo.GetBlob(sha)
 	if err != nil {

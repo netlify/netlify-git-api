@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/julienschmidt/httprouter"
+	"golang.org/x/net/context"
 )
 
 // RefUpdateParams is the JSON object sent when patching a ref
@@ -16,7 +17,8 @@ type RefUpdateParams struct {
 }
 
 // GetRef returns a specific reference
-func GetRef(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func GetRef(w http.ResponseWriter, r *http.Request, params httprouter.Params, ctx context.Context) {
+	currentRepo := getRepo(ctx)
 	name := path.Join("refs", params.ByName("ref"))
 	ref, err := currentRepo.GetRef(name)
 	if err != nil {
@@ -28,7 +30,8 @@ func GetRef(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 }
 
 // UpdateRef sets a new target for a reference
-func UpdateRef(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func UpdateRef(w http.ResponseWriter, r *http.Request, params httprouter.Params, ctx context.Context) {
+	currentRepo := getRepo(ctx)
 	refName := path.Join("refs", params.ByName("ref"))
 	refParams := &RefUpdateParams{}
 	jsonDecoder := json.NewDecoder(r.Body)

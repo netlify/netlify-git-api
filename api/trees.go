@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	gitrepo "github.com/netlify/netlify-git-api/repo"
+	"golang.org/x/net/context"
 )
 
 // TreeCreateParams is the JSON object sent when creating a new tree
@@ -16,7 +17,8 @@ type TreeCreateParams struct {
 }
 
 // CreateTree creates a new tree in the object db
-func CreateTree(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func CreateTree(w http.ResponseWriter, r *http.Request, params httprouter.Params, ctx context.Context) {
+	currentRepo := getRepo(ctx)
 	treeParams := &TreeCreateParams{}
 	jsonDecoder := json.NewDecoder(r.Body)
 	err := jsonDecoder.Decode(treeParams)
@@ -34,7 +36,8 @@ func CreateTree(w http.ResponseWriter, r *http.Request, params httprouter.Params
 }
 
 // GetTree gets a representation of a single tree
-func GetTree(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func GetTree(w http.ResponseWriter, r *http.Request, params httprouter.Params, ctx context.Context) {
+	currentRepo := getRepo(ctx)
 	tree, err := currentRepo.GetTree(params.ByName("sha"))
 	if err != nil {
 		HandleError(w, err)

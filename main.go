@@ -6,81 +6,56 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/netlify/netlify-git-api/api"
 	"github.com/netlify/netlify-git-api/repo"
-	"github.com/rs/cors"
 )
 
-const (
-	rawContentType = "application/vnd.netlify.raw"
-	name           = "Netlify CMS"
-	email          = "team@netlify.com"
-)
-
-// Error is an error with a message
-type Error struct {
-	Msg string `json:"msg"`
+type user struct {
+	name  string
+	email string
 }
 
-var (
-	indexPage = `<!doctype html>
-<html>
-  <head><title>Local Netlify CMS Backend</title></head>
-  <body>
-    <h1>Local Netlify CMS Backend</h1>
-    <p>
-      This is a simple local backend for <a href="https://github.com/netlify/cms">Netlify's CMS</a>
-    </p>
-  </body>
-</html>
-  `
+func (u *user) Name() string {
+	return u.name
+}
 
-	currentRepo *repo.Repo
-)
+func (u *user) Email() string {
+	return u.email
+}
 
-func init() {
+func (u *user) HasPermission(_ string, _ string) bool {
+	return true
+}
+
+type resolver struct {
+	user *user
+	repo *repo.Repo
+}
+
+func (r *resolver) GetUser(_ *http.Request) (api.User, error) {
+	return r.user, nil
+}
+
+func (r *resolver) GetRepo(_ api.User, _ *http.Request) (*repo.Repo, error) {
+	return r.repo, nil
+}
+
+func main() {
 	cwd, err := os.Getwd()
 	if err != nil {
 		panic(fmt.Sprintf("Error getting current working dir: %v", err))
 	}
 
-	currentRepo, err = repo.Open(cwd)
+	currentRepo, err := repo.Open(cwd)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to open git repository in %v: %v", cwd, err))
 	}
-}
 
-// Index serves a basic index page
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, indexPage)
-}
+	resolver := &resolver{
+		user: &user{name: "Netlify CMS", email: "team@netlify.com"},
+		repo: currentRepo,
+	}
 
-// Auth should be opened in a popup. Will create a new token and return it to
-// the origin window via postMessage
-func Auth(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "Not implemented")
-}
-
-func main() {
-	router := httprouter.New()
-	router.GET("/", Index)
-	router.GET("/auth", Auth)
-	router.GET("/files/*path", GetFile)
-
-	router.POST("/blobs", CreateBlob)
-	router.GET("/blobs/:sha", GetBlob)
-
-	router.POST("/trees", CreateTree)
-	router.GET("/trees/:sha", GetTree)
-
-	router.POST("/commits", CreateCommit)
-	router.GET("/commits/:sha", GetCommit)
-
-	router.GET("/refs/*ref", GetRef)
-	router.PATCH("/refs/*ref", UpdateRef)
-
-	corsHandler := cors.New(cors.Options{AllowedMethods: []string{"GET", "POST", "PATCH", "PUT", "DELETE"}})
-
-	log.Fatal(http.ListenAndServe(":8080", corsHandler.Handler(router)))
+	api := api.NewAPI(resolver)
+	log.Fatal(http.ListenAndServe(":8080", api))
 }
