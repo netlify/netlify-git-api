@@ -12,20 +12,37 @@ type NotFoundError struct {
 	object string
 }
 
+// ForbiddenError indicates that the user doesn't have permission to do this action
+type ForbiddenError struct {
+	msg string
+}
+
 func (e *NotFoundError) Error() string {
 	return fmt.Sprintf("No %v with id %v found", e.object, e.id)
+}
+
+func (e *ForbiddenError) Error() string {
+	return e.msg
 }
 
 // Repo represents the github repo we want to operate on
 type Repo struct {
 	repo *git.Repository
+	user User
+}
+
+// User is the main user object for the API.
+type User interface {
+	Name() string
+	Email() string
+	HasPermission(string, string) bool
 }
 
 // Open opens a repository
-func Open(path string) (*Repo, error) {
+func Open(user User, path string) (*Repo, error) {
 	repo, err := git.OpenRepository(path)
 	if err != nil {
 		return nil, err
 	}
-	return &Repo{repo}, nil
+	return &Repo{repo: repo, user: user}, nil
 }

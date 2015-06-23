@@ -1,6 +1,12 @@
 package repo
 
-import "github.com/libgit2/git2go"
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/libgit2/git2go"
+)
 
 // Reference represents a git reference
 type Reference struct {
@@ -32,6 +38,8 @@ func (r *Repo) GetRef(name string) (*Reference, error) {
 }
 
 // UpdateRef updates a reference to point to a new object
+// Will check if the repo user has sufficient permissions to
+// perform this update
 func (r *Repo) UpdateRef(name, newSha string) (*Reference, error) {
 	ref, err := r.repo.LookupReference(name)
 	if err != nil {
@@ -43,7 +51,39 @@ func (r *Repo) UpdateRef(name, newSha string) (*Reference, error) {
 		return nil, err
 	}
 
-	ref, err = ref.SetTarget(oid, nil, "")
+	oldCommit, err := r.GetCommit(ref.Target().String())
+	if err != nil {
+		return nil, err
+	}
+
+	newCommit, err := r.GetCommit(newSha)
+	if err != nil {
+		return nil, err
+	}
+
+	changes, err := oldCommit.ChangedFiles(newCommit)
+	if err != nil {
+		return nil, err
+	}
+
+	failMsg := []string{}
+	for _, change := range changes {
+		if !r.user.HasPermission(change.Action, change.Path) {
+			failMsg = append(failMsg, fmt.Sprintf("you do not have permission to %v: %v", change.Action, change.Path))
+		}
+	}
+
+	if len(failMsg) > 0 {
+		return nil, &ForbiddenError{msg: strings.Join(failMsg, ",")}
+	}
+
+	sig := &git.Signature{
+		Name:  r.user.Name(),
+		Email: r.user.Email(),
+		When:  time.Now(),
+	}
+
+	ref, err = ref.SetTarget(oid, sig, "")
 	if err != nil {
 		return nil, err
 	}

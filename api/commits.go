@@ -19,8 +19,6 @@ type CommitCreateParams struct {
 // CreateCommit creates a new commit
 func CreateCommit(w http.ResponseWriter, r *http.Request, params httprouter.Params, ctx context.Context) {
 	currentRepo := getRepo(ctx)
-	currentUser := getUser(ctx)
-
 	commitParams := &CommitCreateParams{}
 	jsonDecoder := json.NewDecoder(r.Body)
 	err := jsonDecoder.Decode(commitParams)
@@ -28,11 +26,10 @@ func CreateCommit(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		InternalServerError(w, fmt.Sprintf("Could not read commit creation params: %v", err))
 		return
 	}
+
 	commit, err := currentRepo.CreateCommit(
 		commitParams.Tree,
 		commitParams.Msg,
-		currentUser.Name(),
-		currentUser.Email(),
 		commitParams.Parents,
 	)
 	if err != nil {

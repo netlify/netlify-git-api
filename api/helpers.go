@@ -45,14 +45,6 @@ func sendJSON(w http.ResponseWriter, status int, obj interface{}) {
 	encoder.Encode(obj)
 }
 
-// Note - this methods panics if there's no user in the context
-// The context for all handler methods should always have a user
-func getUser(ctx context.Context) User {
-	obj := ctx.Value("user")
-	user := obj.(User)
-	return user
-}
-
 // Note - this methods panics if there's no repo in the context
 // The context for all handler methods should always have a repo
 func getRepo(ctx context.Context) *repo.Repo {

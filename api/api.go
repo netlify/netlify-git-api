@@ -18,32 +18,14 @@ type API struct {
 	resolver Resolver
 }
 
-// User is the main user object for the API.
-type User interface {
-	Name() string
-	Email() string
-	HasPermission(string, string) bool
-}
-
 // Resolver handlers user and repo lookups for requests
 type Resolver interface {
-	GetUser(*http.Request) (User, error)
-	GetRepo(User, *http.Request) (*repo.Repo, error)
+	GetRepo(*http.Request) (*repo.Repo, error)
 }
 
 func (a *API) wrap(fn func(http.ResponseWriter, *http.Request, httprouter.Params, context.Context)) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		user, err := a.resolver.GetUser(r)
-		if err != nil {
-			HandleError(w, err)
-			return
-		}
-		if user == nil {
-			NotAuthorizedError(w, "User could not be authorized")
-			return
-		}
-
-		repo, err := a.resolver.GetRepo(user, r)
+		repo, err := a.resolver.GetRepo(r)
 		if err != nil {
 			HandleError(w, err)
 			return
@@ -54,8 +36,7 @@ func (a *API) wrap(fn func(http.ResponseWriter, *http.Request, httprouter.Params
 			return
 		}
 
-		ctx := context.WithValue(nil, "user", user)
-		ctx = context.WithValue(ctx, "repo", repo)
+		ctx := context.WithValue(nil, "repo", repo)
 
 		fn(w, r, p, ctx)
 	}

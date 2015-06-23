@@ -45,7 +45,7 @@ func CreateBlob(w http.ResponseWriter, r *http.Request, params httprouter.Params
 			return
 		}
 
-		reader = base64.NewDecoder(base64.URLEncoding, bytes.NewBufferString(blobParams.Content))
+		reader = base64.NewDecoder(base64.StdEncoding, bytes.NewBufferString(blobParams.Content))
 	}
 	blob, err := currentRepo.PutBlob(reader)
 	if err != nil {

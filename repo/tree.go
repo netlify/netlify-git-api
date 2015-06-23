@@ -9,12 +9,14 @@ import (
 
 // Tree a tree in the repository object db
 type Tree struct {
+	id   *git.Oid
 	Sha  string       `json:"sha"`
 	Tree []*TreeEntry `json:"tree,omitempty"`
 }
 
 // TreeEntry a single entry in a RepoTree
 type TreeEntry struct {
+	id   *git.Oid
 	Path string `json:"path"`
 	Type string `json:"type"`
 	Mode string `json:"mode"`
@@ -33,6 +35,7 @@ func (r *Repo) newTreeEntry(entry *git.TreeEntry) *TreeEntry {
 		objType = "tree"
 	}
 	return &TreeEntry{
+		id:   entry.Id,
 		Path: entry.Name,
 		Size: size,
 		Mode: fmt.Sprintf("%v", entry.Filemode),
@@ -54,6 +57,7 @@ func (r *Repo) GetTree(sha string) (*Tree, error) {
 	}
 
 	repoTree := &Tree{
+		id:   oid,
 		Sha:  sha,
 		Tree: make([]*TreeEntry, tree.EntryCount()),
 	}

@@ -28,15 +28,10 @@ func (u *user) HasPermission(_ string, _ string) bool {
 }
 
 type resolver struct {
-	user *user
 	repo *repo.Repo
 }
 
-func (r *resolver) GetUser(_ *http.Request) (api.User, error) {
-	return r.user, nil
-}
-
-func (r *resolver) GetRepo(_ api.User, _ *http.Request) (*repo.Repo, error) {
+func (r *resolver) GetRepo(_ *http.Request) (*repo.Repo, error) {
 	return r.repo, nil
 }
 
@@ -46,15 +41,14 @@ func main() {
 		panic(fmt.Sprintf("Error getting current working dir: %v", err))
 	}
 
-	currentRepo, err := repo.Open(cwd)
+	user := &user{name: "Netlify CMS", email: "team@netlify.com"}
+
+	currentRepo, err := repo.Open(user, cwd)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to open git repository in %v: %v", cwd, err))
 	}
 
-	resolver := &resolver{
-		user: &user{name: "Netlify CMS", email: "team@netlify.com"},
-		repo: currentRepo,
-	}
+	resolver := &resolver{repo: currentRepo}
 
 	api := api.NewAPI(resolver)
 	log.Fatal(http.ListenAndServe(":8080", api))

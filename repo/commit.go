@@ -8,12 +8,14 @@ import (
 
 // Commit represents a commit
 type Commit struct {
+	id        *git.Oid
 	Sha       string          `json:"sha"`
 	Author    *Author         `json:"author,omitempty"`
 	Committer *Author         `json:"committer,omitempty"`
 	Message   string          `json:"message"`
 	Tree      *Tree           `json:"tree"`
 	Parents   []*CommitParent `json:"parents"`
+	repo      *Repo
 }
 
 // CommitParent represents a parent of a commit
@@ -28,8 +30,15 @@ type Author struct {
 	Date  time.Time `json:"date"`
 }
 
+// FileChange represents a file that will change between two commits
+// Action can be "create", "update", "delete"
+type FileChange struct {
+	Action string
+	Path   string
+}
+
 // GetCommit looks up a commit from a sha
-func (r Repo) GetCommit(sha string) (*Commit, error) {
+func (r *Repo) GetCommit(sha string) (*Commit, error) {
 	oid, err := git.NewOid(sha)
 	if err != nil {
 		return nil, err
@@ -41,10 +50,12 @@ func (r Repo) GetCommit(sha string) (*Commit, error) {
 	}
 
 	repoCommit := &Commit{
+		id:      oid,
 		Sha:     sha,
 		Message: commit.Message(),
-		Tree:    &Tree{Sha: commit.TreeId().String()},
+		Tree:    &Tree{id: commit.TreeId(), Sha: commit.TreeId().String()},
 		Parents: make([]*CommitParent, commit.ParentCount()),
+		repo:    r,
 	}
 
 	author := commit.Author()
@@ -66,7 +77,7 @@ func (r Repo) GetCommit(sha string) (*Commit, error) {
 }
 
 // CreateCommit creates a new commit in the repository
-func (r Repo) CreateCommit(treeSha, msg, name, email string, parentShas []string) (*Commit, error) {
+func (r *Repo) CreateCommit(treeSha, msg string, parentShas []string) (*Commit, error) {
 	treeID, err := git.NewOid(treeSha)
 	if err != nil {
 		return nil, err
@@ -92,8 +103,8 @@ func (r Repo) CreateCommit(treeSha, msg, name, email string, parentShas []string
 	}
 
 	sig := &git.Signature{
-		Name:  name,
-		Email: email,
+		Name:  r.user.Name(),
+		Email: r.user.Email(),
 		When:  time.Now(),
 	}
 
@@ -103,4 +114,36 @@ func (r Repo) CreateCommit(treeSha, msg, name, email string, parentShas []string
 	}
 
 	return r.GetCommit(oid.String())
+}
+
+// ChangedFiles between two commits
+func (c *Commit) ChangedFiles(other *Commit) ([]*FileChange, error) {
+	oldTree, err := c.repo.repo.LookupTree(c.Tree.id)
+	if err != nil {
+		return nil, err
+	}
+	newTree, err := c.repo.repo.LookupTree(other.Tree.id)
+	if err != nil {
+		return nil, err
+	}
+
+	diff, err := c.repo.repo.DiffTreeToTree(oldTree, newTree, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	changes := []*FileChange{}
+	deltas, _ := diff.NumDeltas()
+	for i := 0; i < deltas; i++ {
+		delta, _ := diff.GetDelta(i)
+		if delta.OldFile.Oid == nil || delta.OldFile.Oid.IsZero() {
+			changes = append(changes, &FileChange{Path: delta.NewFile.Path, Action: "create"})
+		} else if delta.NewFile.Oid == nil || delta.NewFile.Oid.IsZero() {
+			changes = append(changes, &FileChange{Path: delta.OldFile.Path, Action: "delete"})
+		} else {
+			changes = append(changes, &FileChange{Path: delta.NewFile.Path, Action: "update"})
+		}
+	}
+
+	return changes, nil
 }

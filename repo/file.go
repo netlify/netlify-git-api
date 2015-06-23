@@ -9,6 +9,7 @@ import (
 
 // File a file in the repository
 type File struct {
+	id    *git.Oid
 	Name  string  `json:"name"`
 	Path  string  `json:"path"`
 	Size  int64   `json:"size"`
@@ -19,6 +20,7 @@ type File struct {
 
 func (r *Repo) newRepoFile(entry *git.TreeEntry, dir string, expand bool) (*File, error) {
 	file := &File{
+		id:   entry.Id,
 		Name: entry.Name,
 		Path: path.Join(dir, entry.Name),
 		Sha:  entry.Id.String(),
