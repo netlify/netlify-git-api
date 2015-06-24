@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -86,6 +87,18 @@ func (r *Repo) UpdateRef(name, newSha string) (*Reference, error) {
 	ref, err = ref.SetTarget(oid, sig, "")
 	if err != nil {
 		return nil, err
+	}
+
+	if !r.repo.IsBare() {
+		paths := make([]string, len(changes))
+		for i, change := range changes {
+			paths[i] = change.Path
+		}
+
+		err = r.repo.CheckoutHead(&git.CheckoutOpts{Strategy: git.CheckoutForce, Paths: paths})
+		if err != nil {
+			log.Fatalf("Error checking out head: %v", err)
+		}
 	}
 
 	return &Reference{
