@@ -95,7 +95,7 @@ func Serve(dbPath, host, port string) {
 		log.Fatalf("Error - no users in user db %v\n", dbPath)
 	}
 
-	resolver := &resolver{db: userDB, repoPath: cwd}
+	resolver := &resolver{db: userDB, repoPath: cwd, tokens: map[string]string{}}
 
 	api := api.NewAPI(resolver)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), api))
