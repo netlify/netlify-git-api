@@ -20,6 +20,7 @@ type API struct {
 
 // Resolver handlers user and repo lookups for requests
 type Resolver interface {
+	Authenticate(string, string) (string, error)
 	GetRepo(*http.Request) (*repo.Repo, error)
 }
 
@@ -42,12 +43,42 @@ func (a *API) wrap(fn func(http.ResponseWriter, *http.Request, httprouter.Params
 	}
 }
 
+func (a *API) tokenFn() httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		if r.FormValue("grant_type") != "client_credentials" {
+			NotAuthorizedError(w, "Unsupported grant type")
+			return
+		}
+
+		email, pw, ok := r.BasicAuth()
+		if !ok {
+			NotAuthorizedError(w, "Missing email or password")
+		}
+
+		token, err := a.resolver.Authenticate(email, pw)
+		if err != nil {
+			HandleError(w, err)
+			return
+		}
+		if token == "" {
+			NotAuthorizedError(w, "Access Denied")
+			return
+		}
+
+		resp := map[string]string{
+			"access_token": string(token),
+			"token_type":   "bearer",
+		}
+		sendJSON(w, 200, resp)
+	}
+}
+
 // NewAPI instantiates a new API with a resolver
 func NewAPI(resolver Resolver) http.Handler {
 	api := API{resolver: resolver}
 	router := httprouter.New()
 	router.GET("/", Index)
-	router.GET("/auth", Auth)
+	router.POST("/token", api.tokenFn())
 	router.GET("/files/*path", api.wrap(GetFile))
 
 	router.POST("/blobs", api.wrap(CreateBlob))
