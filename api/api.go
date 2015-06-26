@@ -74,7 +74,8 @@ func (a *API) tokenFn() httprouter.Handle {
 	}
 }
 
-// NewAPI instantiates a new API with a resolver
+// NewAPI instantiates a new API with a resolver. Sync determines whether to
+// sync the underlying repo with a remote origin
 func NewAPI(resolver Resolver) http.Handler {
 	api := API{resolver: resolver}
 	router := httprouter.New()

@@ -29,6 +29,7 @@ func (e *ForbiddenError) Error() string {
 type Repo struct {
 	repo *git.Repository
 	user User
+	sync bool
 }
 
 // User is the main user object for the API.
@@ -39,10 +40,11 @@ type User interface {
 }
 
 // Open opens a repository
-func Open(user User, path string) (*Repo, error) {
+func Open(user User, path string, sync bool) (*Repo, error) {
 	repo, err := git.OpenRepository(path)
 	if err != nil {
 		return nil, err
 	}
-	return &Repo{repo: repo, user: user}, nil
+
+	return &Repo{repo: repo, user: user, sync: sync}, nil
 }

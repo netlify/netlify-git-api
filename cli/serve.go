@@ -34,6 +34,7 @@ type resolver struct {
 	db       *userdb.UserDB
 	repoPath string
 	tokens   map[string]string
+	sync     bool
 }
 
 func (r *resolver) GetRepo(req *http.Request) (*repo.Repo, error) {
@@ -56,7 +57,7 @@ func (r *resolver) GetRepo(req *http.Request) (*repo.Repo, error) {
 		return nil, nil
 	}
 
-	currentRepo, err := repo.Open(&userWrapper{dbUser: user}, r.repoPath)
+	currentRepo, err := repo.Open(&userWrapper{dbUser: user}, r.repoPath, r.sync)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to open git repository in %v: %v", r.repoPath, err))
 	}
@@ -81,7 +82,7 @@ func (r *resolver) Authenticate(email, pw string) (string, error) {
 }
 
 // Serve starts a new REST API server
-func Serve(dbPath, host, port string) {
+func Serve(dbPath, host, port string, sync bool) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Error getting current working dir: %v\n", err)
@@ -95,7 +96,7 @@ func Serve(dbPath, host, port string) {
 		log.Fatalf("Error - no users in user db %v\n", dbPath)
 	}
 
-	resolver := &resolver{db: userDB, repoPath: cwd, tokens: map[string]string{}}
+	resolver := &resolver{db: userDB, repoPath: cwd, tokens: map[string]string{}, sync: sync}
 
 	api := api.NewAPI(resolver)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%v:%v", host, port), api))

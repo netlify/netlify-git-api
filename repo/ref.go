@@ -95,7 +95,9 @@ func (r *Repo) UpdateRef(name, newSha string) (*Reference, error) {
 			paths[i] = change.Path
 		}
 
-		err = r.repo.CheckoutHead(&git.CheckoutOpts{Strategy: git.CheckoutForce, Paths: paths})
+		tree, _ := r.repo.LookupTree(newCommit.Tree.id)
+		err = r.repo.CheckoutTree(tree, &git.CheckoutOpts{Strategy: git.CheckoutForce, Paths: paths})
+		//err = r.repo.CheckoutHead(&git.CheckoutOpts{Strategy: git.CheckoutForce, Paths: paths})
 		if err != nil {
 			log.Fatalf("Error checking out head: %v", err)
 		}

@@ -14,6 +14,7 @@ var (
 	serve = app.Command("serve", "Start a local Git API server")
 	port  = serve.Flag("port", "Port to listen to").Short('p').Default("8080").String()
 	host  = serve.Flag("host", "IP to bind to").Short('h').Default("127.0.0.1").IP()
+	//sync  = serve.Flag("sync", "Push and pull to the origin remote ()").Short('s').Bool()
 
 	users = app.Command("users", "List users")
 
@@ -28,10 +29,11 @@ var (
 
 // Run the cli tool
 func Run() {
+	sync := true
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case serve.FullCommand():
 		fmt.Printf("Starting server on %v:%v\n", *host, *port)
-		Serve(*dbPath, host.String(), *port)
+		Serve(*dbPath, host.String(), *port, *sync)
 	case usersList.FullCommand():
 		ListUsers(*dbPath)
 	case usersAdd.FullCommand():
