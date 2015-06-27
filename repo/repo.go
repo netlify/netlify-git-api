@@ -3,7 +3,7 @@ package repo
 import (
 	"fmt"
 
-	"github.com/libgit2/git2go"
+	"gopkg.in/libgit2/git2go.v22"
 )
 
 // NotFoundError indicates that an object could not be found

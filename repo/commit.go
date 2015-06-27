@@ -3,7 +3,7 @@ package repo
 import (
 	"time"
 
-	"github.com/libgit2/git2go"
+	"gopkg.in/libgit2/git2go.v22"
 )
 
 // Commit represents a commit

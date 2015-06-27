@@ -29,11 +29,10 @@ var (
 
 // Run the cli tool
 func Run() {
-	sync := true
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case serve.FullCommand():
 		fmt.Printf("Starting server on %v:%v\n", *host, *port)
-		Serve(*dbPath, host.String(), *port, *sync)
+		Serve(*dbPath, host.String(), *port, false)
 	case usersList.FullCommand():
 		ListUsers(*dbPath)
 	case usersAdd.FullCommand():
