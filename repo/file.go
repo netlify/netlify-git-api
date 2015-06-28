@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/libgit2/git2go"
+	"gopkg.in/libgit2/git2go.v22"
 )
 
 // File a file in the repository
