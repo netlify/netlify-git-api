@@ -53,13 +53,7 @@ func (a *API) tokenFn() httprouter.Handle {
 			return
 		}
 
-		auth := r.Header.Get("Authorization")
-		if auth == "" {
-			NotAuthorizedError(w, "No authorization header")
-			return
-		}
-
-		email, pw, ok := parseBasicAuth(auth)
+		email, pw, ok := r.BasicAuth()
 		if !ok {
 			NotAuthorizedError(w, "Missing email or password")
 			return
