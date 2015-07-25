@@ -85,6 +85,7 @@ func NewAPI(resolver Resolver) http.Handler {
 	router.GET("/", Index)
 	router.POST("/token", api.tokenFn())
 	router.GET("/files/*path", api.wrap(GetFile))
+	router.DELETE("/files/*path", api.wrap(DeleteFile))
 
 	router.POST("/blobs", api.wrap(CreateBlob))
 	router.GET("/blobs/:sha", api.wrap(GetBlob))

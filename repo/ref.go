@@ -91,13 +91,23 @@ func (r *Repo) UpdateRef(name, newSha string) (*Reference, error) {
 
 	if !r.repo.IsBare() {
 		paths := make([]string, len(changes))
+		del := false
 		for i, change := range changes {
 			paths[i] = change.Path
+			if change.Action == "delete" {
+				del = true
+			}
 		}
 
 		tree, _ := r.repo.LookupTree(newCommit.Tree.id)
-		err = r.repo.CheckoutTree(tree, &git.CheckoutOpts{Strategy: git.CheckoutForce, Paths: paths})
-		//err = r.repo.CheckoutHead(&git.CheckoutOpts{Strategy: git.CheckoutForce, Paths: paths})
+		options := &git.CheckoutOpts{Strategy: git.CheckoutForce}
+		// If we're deleting files, passing paths to options makes those deleted files
+		// stick around in the index and causes weirdness, so we only specify paths (safer)
+		// when there are no deletes
+		if del == false {
+			options.Paths = paths
+		}
+		err = r.repo.CheckoutTree(tree, options)
 		if err != nil {
 			log.Fatalf("Error checking out head: %v", err)
 		}
