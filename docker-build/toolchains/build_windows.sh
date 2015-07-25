@@ -6,11 +6,11 @@ if [ ! -f /usr/local/bin/windres ]; then
   ln -s /usr/bin/x86_64-w64-mingw32-windres /usr/local/bin/windres
 fi
 
-if [ ! -d /deps/openssl-1.0.2c ]; then
+if [ ! -d /deps/openssl-1.0.2d ]; then
   cd /deps
-  wget https://www.openssl.org/source/openssl-1.0.2c.tar.gz
-  tar zxvf openssl-1.0.2c.tar.gz
-  cd openssl-1.0.2c
+  wget https://www.openssl.org/source/openssl-1.0.2d.tar.gz
+  tar zxvf openssl-1.0.2d.tar.gz
+  cd openssl-1.0.2d
   CC=x86_64-w64-mingw32-gcc HOST=x86_64-w64-mingw32 INCLUDE=/usr/x86_64-w64-mingw32/include LIB=/usr/x86_64-w64-mingw32/lib ./Configure --prefix=/usr/x86_64-w64-mingw32 mingw64
   make
   make install
