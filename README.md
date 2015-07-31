@@ -10,7 +10,7 @@ Grab the binary from your platform from the [latest release](https://github.com/
 
 ```bash
 cd my-project
-netlify users add
+netlify-git-api users add
 netlify-git-api serve
 ```
 
