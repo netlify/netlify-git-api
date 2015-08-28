@@ -1,7 +1,6 @@
 package userdb
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -66,7 +65,6 @@ func (db *UserDB) Get(id string) *User {
 
 // Add a new user to the db
 func (db *UserDB) Add(email, name, pw string) (*User, error) {
-	fmt.Printf("Adding user with pw: '%v'\n", pw)
 	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
