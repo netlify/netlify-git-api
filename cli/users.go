@@ -3,32 +3,23 @@ package cli
 import (
 	"fmt"
 	"log"
-	"os"
+	"syscall"
 
 	"github.com/netlify/netlify-git-api/userdb"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
 func promptString(name string) (string, error) {
-	oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		panic(err)
-	}
-	defer terminal.Restore(int(os.Stdin.Fd()), oldState)
-
-	t := terminal.NewTerminal(os.Stdin, fmt.Sprintf("%v: ", name))
-	return t.ReadLine()
+	fmt.Println(fmt.Sprintf("%v: ", name))
+	var input string
+	fmt.Scanln(&input)
+	return input, nil
 }
 
 func promptPassword() (string, error) {
-	oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		panic(err)
-	}
-	defer terminal.Restore(int(os.Stdin.Fd()), oldState)
-
-	t := terminal.NewTerminal(os.Stdin, "")
-	return t.ReadPassword("Password: ")
+	fmt.Println("Password: ")
+	bytes, err := terminal.ReadPassword(syscall.Stdin)
+	return fmt.Sprintf("%s", bytes), err
 }
 
 // ListUsers lists all users
