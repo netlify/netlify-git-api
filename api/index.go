@@ -14,7 +14,7 @@ var (
   <body>
     <h1>Local Netlify CMS Backend</h1>
     <p>
-      This is a simple local backend for <a href="https://github.com/netlify/cms">Netlify's CMS</a>
+      This is a simple local backend for <a href="https://github.com/netlify/netlify-cms">Netlify's CMS</a>
     </p>
   </body>
 </html>
