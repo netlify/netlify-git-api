@@ -1,6 +1,6 @@
 set -e
 
-mkdir -p /cmd/build
+mkdir -p /cmd/build/windows
 
 if [ ! -f /usr/local/bin/windres ]; then
   ln -s /usr/bin/x86_64-w64-mingw32-windres /usr/local/bin/windres
@@ -37,4 +37,4 @@ export CGO_LDFLAGS="/usr/local/windows/lib/libgit2.a -L/usr/local/windows/lib -L
 export PKG_CONFIG_PATH=/usr/local/windows/lib/pkgconfig:/usr/x86_64-w64-mingw32/lib/pkgconfig
 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go get -d github.com/netlify/netlify-git-api
 cd /go/src/github.com/netlify/netlify-git-api
-CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -v -a -i -x -tags netgo --ldflags='-extldflags "/usr/local/windows/lib/libgit2.a -static"' -o /cmd/build/netlify-git-api-windows.exe
+CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -v -a -i -x -tags netgo --ldflags='-extldflags "/usr/local/windows/lib/libgit2.a -static"' -o /cmd/build/windows/netlify-git-api.exe

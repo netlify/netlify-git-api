@@ -1,6 +1,6 @@
 set -e
 
-mkdir -p /cmd/build
+mkdir -p /cmd/build/osx
 
 if [ ! -f /usr/local/bin/clang ]; then
   ln -s $(which clang-3.6) /usr/local/bin/clang
@@ -53,5 +53,5 @@ export PKG_CONFIG_PATH=/usr/local/osx/lib/pkgconfig:/osxcross/target/macports/pk
 
 CC=o64-clang GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go get -d github.com/netlify/netlify-git-api
 cd /go/src/github.com/netlify/netlify-git-api
-CC=o64-clang GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -v -a -i -x -tags netgo -o /cmd/build/netlify-git-api-osx
+CC=o64-clang GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -v -a -i -x -tags netgo -o /cmd/build/osx/netlify-git-api
 export PATH=$PATH
