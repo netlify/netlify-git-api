@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"log"
-	"syscall"
+	"os"
 
 	"github.com/netlify/netlify-git-api/userdb"
 	"golang.org/x/crypto/ssh/terminal"
@@ -18,7 +18,7 @@ func promptString(name string) (string, error) {
 
 func promptPassword() (string, error) {
 	fmt.Println("Password: ")
-	bytes, err := terminal.ReadPassword(syscall.Stdin)
+	bytes, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	return fmt.Sprintf("%s", bytes), err
 }
 
