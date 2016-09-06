@@ -1,0 +1,16 @@
+package: github.com/netlify/netlify-git-api
+import:
+- package: github.com/julienschmidt/httprouter
+- package: github.com/pborman/uuid
+- package: github.com/rs/cors
+  version: v1.0
+- package: golang.org/x/crypto
+  subpackages:
+  - bcrypt
+  - ssh/terminal
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: gopkg.in/alecthomas/kingpin.v2
+- package: gopkg.in/libgit2/git2go.v22
+- package: gopkg.in/yaml.v2
