@@ -7,11 +7,10 @@ import (
 	"os"
 	"strings"
 
-	"code.google.com/p/go-uuid/uuid"
-
 	"github.com/netlify/netlify-git-api/api"
 	"github.com/netlify/netlify-git-api/repo"
 	"github.com/netlify/netlify-git-api/userdb"
+	"github.com/pborman/uuid"
 )
 
 type userWrapper struct {

@@ -4,7 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/pborman/uuid"
+
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/yaml.v2"
 )
